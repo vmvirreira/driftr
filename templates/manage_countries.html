@@ -1,0 +1,48 @@
+<!-- manage_countries.html -->
+{% extends "layout.html" %}
+{% block content %}
+<div class="container">
+    <h2>Manage Countries</h2>
+    <form action="{{ url_for('add_country_view') }}" method="POST" class="mb-3">
+        <div class="row">
+            <div class="col">
+                <input type="text" class="form-control" name="country_name" placeholder="Country Name" required>
+            </div>
+            <div class="col">
+                <input type="text" class="form-control" name="mp3_link" placeholder="MP3 Link" required>
+            </div>
+            <div class="col">
+                <button type="submit" class="btn btn-primary">Add Country</button>
+            </div>
+        </div>
+    </form>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Country Name</th>
+                <th>MP3 Link</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for country in countries %}
+            <tr>
+                <td>{{ country.country_name }}</td>
+                <td>{{ country.mp3_link }}</td>
+                <td>
+                    <form action="{{ url_for('update_country_view', id=country.id) }}" method="POST" class="d-inline">
+                        <input type="text" name="country_name" value="{{ country.country_name }}" required>
+                        <input type="text" name="mp3_link" value="{{ country.mp3_link }}" required>
+                        <button type="submit" class="btn btn-success btn-sm">Update</button>
+                    </form>
+                    <form action="{{ url_for('delete_country_view', id=country.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
