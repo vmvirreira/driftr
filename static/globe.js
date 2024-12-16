@@ -9,9 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
         .onPolygonClick((country) => {
             const countryName = country.properties.name || 'Unknown Country';
             console.log('Clicked country:', countryName);  // Log the clicked country name
-
-            // Update the selected country text
-            selectedCountryText.textContent = countryName;
             
             // Fetch the MP3 link from the backend
             fetch(`/api/mp3/${countryName}`)
