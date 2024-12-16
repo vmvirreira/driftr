@@ -78,45 +78,4 @@
     <!-- Globe Container -->
     <div id="globe-container"></div>
 </body>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const audioPlayer = document.getElementById('audio-player');
-        const selectedCountryText = document.getElementById('selected-country-text');
-
-        // Initialize the globe
-        const globe = Globe()(document.getElementById('globe-container'))
-            .globeImageUrl('//unpkg.com/three-globe/example/img/earth-dark.jpg')
-            .polygonCapColor(() => 'rgba(0, 100, 255, 0.6)')  // Default country color
-            .polygonLabel(({ properties: d }) => `${d.ADMIN || d.NAME || 'Unknown Country'}`)  // Hover label
-            .onPolygonClick((country) => {
-                const countryName = country.properties.ADMIN || country.properties.NAME || 'Unknown Country';
-
-                // Update the selected country text
-                selectedCountryText.textContent = countryName;
-
-                // Fetch MP3 link from the Flask backend
-                fetch(`/api/mp3/${countryName}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.mp3_link) {
-                            console.log("Playing MP3:", data.mp3_link);
-                            audioPlayer.src = data.mp3_link;
-                            audioPlayer.play();
-                        } else {
-                            console.log('No MP3 found for ' + countryName);
-                            alert('No MP3 found for ' + countryName);
-                        }
-                    })
-                    .catch(err => console.error('Error fetching MP3:', err));
-            });
-
-        // Fetch the countries data from TopoJSON and convert it to GeoJSON
-        fetch('//unpkg.com/world-atlas/countries-110m.json')
-            .then(response => response.json())
-            .then(world => {
-                const countriesGeoJson = topojson.feature(world, world.objects.countries);
-                globe.polygonsData(countriesGeoJson.features);  // Add the GeoJSON features as polygons
-            });
-    });
-</script>
 </html>
