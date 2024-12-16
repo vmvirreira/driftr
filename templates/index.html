@@ -3,50 +3,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
     <title>driftr</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+   <!-- Bootstrap CSS -->
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+   <!-- Bootstrap JS without integrity -->
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/three"></script>
     <script src="https://unpkg.com/globe.gl"></script>
     <script src="https://unpkg.com/topojson@3"></script>
     <script src="{{ url_for('static', filename='globe.js') }}"></script>
-
     <style>
-        /* Layout adjustments for the selected country text and audio player */
-        .selected-country-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background-color: #007bff; /* Blue background */
-            color: white;             /* White text */
-            padding: 10px;
-        }
-
-        .selected-country-text {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        /* Globe container to adjust height */
-        #globe-container {
+      #globe-container {
             width: 100%;
-            height: calc(100vh - 150px); /* Adjust height to leave room for navigation and text */
+            height: 80vh; /* 80% of the viewport height */
         }
-
-        /* Full height for body and html */
-        html, body {
+      /* Custom styling to center the audio control and add a blue background */
+      .audio-container {
+          background-color: #011225; /* Bootstrap's blue color */
+          padding: 10px 0;           /* Add some padding */
+          text-align: right;         /* Center the content */
+      }
+      /* Ensure the body and html take up the full height */
+      html, body {
             height: 100%;
             margin: 0;
-        }
-
-        /* Audio player width */
-        audio {
-            width: 250px;
-        }
-    </style>
+      }
+      </style>
 </head>
 <body>
     <!-- Navigation bar -->
@@ -69,13 +52,15 @@
         </div>
     </nav>
 
-    <!-- Selected Country Text and Audio Player -->
-    <div class="selected-country-container">
-        <div class="selected-country-text" id="selected-country-text">Select a Country</div>
-        <audio id="audio-player" controls></audio>
+    <div>
+        <!-- Globe Container -->
+        <div id="globe-container"></div>
+        <!-- Audio Player -->
+        <div class="audio-container">
+          <audio id="audio-player" controls></audio>
+        </div>
     </div>
 
-    <!-- Globe Container -->
-    <div id="globe-container"></div>
+    <!-- Add additional content here for forms (CRUD) -->
 </body>
 </html>
