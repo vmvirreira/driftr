@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const audioPlayer = document.getElementById('audio-player');
+    const selectedCountryText = document.getElementById('selected-country-text');
 
     // Initialize the globe
     const globe = Globe()(document.getElementById('globe-container'))
@@ -9,10 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
         .onPolygonClick((country) => {
             const countryName = country.properties.name || 'Unknown Country';
             console.log('Clicked country:', countryName);  // Log the clicked country name
-
+            
             // Update the selected country text
             selectedCountryText.textContent = countryName;
-            
+
             // Fetch the MP3 link from the backend
             fetch(`/api/mp3/${countryName}`)
                 .then(response => response.json())
