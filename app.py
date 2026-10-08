@@ -5,6 +5,8 @@ from flask import jsonify
 import os
 
 app = Flask(__name__, static_folder='public/static', static_url_path='/static')
+# etherLAND normalizes public routes to trailing slashes.
+app.url_map.strict_slashes = False
 database_url = os.environ.get('DATABASE_URL')
 if database_url and database_url.startswith(('postgres://', 'postgresql://')):
     database_url = database_url.replace(database_url.split('://')[0] + '://', 'postgresql+psycopg://', 1)
