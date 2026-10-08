@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin access · driftr</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#071421;color:#e7f0f5;font:16px system-ui,sans-serif;min-height:100vh;display:grid;place-items:center;padding:24px}main{width:100%;max-width:440px;background:#0d2331;border:1px solid #ffffff20;border-radius:18px;padding:32px}a{color:#64d8cf}h1{font-size:1.65rem;margin-top:28px}p{color:#a0b6c4;line-height:1.6}label{display:block;margin:18px 0 8px}input{width:100%;border:1px solid #ffffff30;border-radius:8px;background:#071421;color:#e7f0f5;padding:12px;font:inherit}button{margin-top:24px;width:100%;padding:12px;border:0;border-radius:8px;background:#64d8cf;color:#071421;font:inherit;font-weight:650}button:disabled{opacity:.6}#login-status{min-height:24px;color:#f1cf8b}
+</style>
+</head>
+<body><main>
+<a href="{{ url_for('index') }}">← Back to driftr</a>
+<h1>Admin access</h1>
+{% if user %}
+<p>Signed in as {{ user.email }}.</p>
+<p><a href="{{ url_for('manage_countries') }}">Manage countries</a></p>
+<p><a href="{{ url_for('manage_categories') }}">Manage categories</a></p>
+<form action="{{ url_for('admin_logout') }}" method="POST"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button>Sign out</button></form>
+{% else %}
+<p>Sign in with your Dayboard admin account to view content management.</p>
+<form id="login-form">
+<label for="email">Email</label><input id="email" type="email" autocomplete="username" required>
+<label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required>
+<button id="login-button">Sign in</button>
+<p id="login-status" role="status"></p>
+</form>
+<script>
+document.getElementById('login-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    const button = document.getElementById('login-button');
+    const status = document.getElementById('login-status');
+    button.disabled = true; status.textContent = 'Checking your account…';
+    try {
+        const auth = await fetch({{ (supabase_url + '/auth/v1/token?grant_type=password') | tojson }}, {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': {{ supabase_key | tojson }} },
+            body: JSON.stringify({email: document.getElementById('email').value, password: document.getElementById('password').value})
+        });
+        const session = await auth.json();
+        document.getElementById('password').value = '';
+        if (!auth.ok || !session.access_token) throw new Error('Sign-in failed. Check your email and password.');
+        const response = await fetch({{ url_for('admin_session') | tojson }}, {method: 'POST', headers: {'Authorization': 'Bearer ' + session.access_token}});
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
+        location.assign(result.redirect);
+    } catch (error) { status.textContent = error.message || 'Sign-in unavailable. Please try again.'; }
+    finally { button.disabled = false; }
+});
+</script>
+{% endif %}
+</main></body></html>

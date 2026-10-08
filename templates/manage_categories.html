@@ -4,6 +4,7 @@
 <div class="container">
     <h2>Manage Categories</h2>
     <form action="{{ url_for('add_category_view') }}" method="POST" class="mb-3">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="row">
             <div class="col">
                 <input type="text" class="form-control" name="category_name" placeholder="Category Name" required>
@@ -27,10 +28,12 @@
                 <td>{{ category.name }}</td>
                 <td>
                     <form action="{{ url_for('update_category_view', id=category.id) }}" method="POST" class="d-inline">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="text" name="category_name" value="{{ category.name }}" required>
                         <button type="submit" class="btn btn-success btn-sm">Update</button>
                     </form>
                     <form action="{{ url_for('delete_category_view', id=category.id) }}" method="POST" class="d-inline">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                     </form>
                 </td>

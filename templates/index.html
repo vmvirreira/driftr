@@ -1,82 +1,58 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>driftr</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/three"></script>
     <script src="https://unpkg.com/globe.gl"></script>
     <script src="https://unpkg.com/topojson@3"></script>
     <script>window.DRIFTR_BASE_URL = {{ url_for('index') | tojson }};</script>
-    <script src="{{ url_for('static', filename='globe.js') }}"></script>
-
+    <script src="{{ url_for('static', filename='globe.js') }}" defer></script>
     <style>
-        /* Layout adjustments for the selected country text and audio player */
-        .selected-country-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background-color: #007bff; /* Blue background */
-            color: white;             /* White text */
-            padding: 10px;
-        }
-
-        .selected-country-text {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        /* Globe container to adjust height */
-        #globe-container {
-            width: 100%;
-            height: calc(100vh - 150px); /* Adjust height to leave room for navigation and text */
-        }
-
-        /* Full height for body and html */
-        html, body {
-            height: 100%;
-            margin: 0;
-        }
-
-        /* Audio player width */
-        audio {
-            width: 250px;
+        :root { color-scheme: dark; --music: #64d8cf; --selected: #f1cf8b; }
+        * { box-sizing: border-box; }
+        html, body { height: 100%; margin: 0; }
+        body { display: flex; flex-direction: column; background: #071421; color: #e7f0f5; font-family: system-ui, sans-serif; }
+        .navigation { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid #ffffff16; }
+        .brand { color: #e7f0f5; text-decoration: none; font-size: 1.3rem; font-weight: 650; letter-spacing: -.04em; }
+        .admin-link { color: #a0b6c4; font-size: .85rem; text-decoration: none; }
+        .admin-link:hover { color: var(--music); }
+        .listening-bar { display: flex; align-items: center; gap: 32px; padding: 18px 24px; background: #0d2331; border-bottom: 1px solid #ffffff16; }
+        .country-details { flex: 0 1 290px; min-width: 180px; }
+        .selected-country-text { font-size: 1.3rem; font-weight: 600; }
+        .hint { color: #a0b6c4; font-size: .85rem; margin-top: 5px; }
+        audio { flex: 1; width: 100%; min-width: 0; max-width: 1100px; height: 46px; }
+        .globe-stage { position: relative; flex: 1; min-height: 320px; overflow: hidden; }
+        #globe-container { width: 100%; height: 100%; }
+        .legend { position: absolute; z-index: 1; bottom: 20px; left: 24px; display: flex; gap: 22px; padding: 10px 14px; background: #071421db; border: 1px solid #ffffff20; border-radius: 12px; font-size: .8rem; pointer-events: none; }
+        .legend span { display: flex; align-items: center; gap: 8px; }
+        .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--music); }
+        .dot.selected { background: var(--selected); }
+        @media (max-width: 640px) {
+            .navigation { padding: 12px 16px; }
+            .listening-bar { flex-direction: column; align-items: stretch; gap: 12px; padding: 16px; }
+            .country-details { flex: auto; }
+            audio { flex: auto; max-width: none; }
+            .legend { left: 16px; bottom: 16px; }
         }
     </style>
 </head>
 <body>
-    <!-- Navigation bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">driftr</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('manage_countries') }}">Manage Countries</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('manage_categories') }}">Manage Categories</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
+    <nav class="navigation" aria-label="Main navigation">
+        <a class="brand" href="{{ url_for('index') }}">driftr</a>
+        <a class="admin-link" href="{{ url_for('admin') }}">Admin access</a>
     </nav>
-
-    <!-- Selected Country Text and Audio Player -->
-    <div class="selected-country-container">
-        <div class="selected-country-text" id="selected-country-text">Select a Country</div>
-        <audio id="audio-player" controls></audio>
-    </div>
-
-    <!-- Globe Container -->
-    <div id="globe-container"></div>
+    <section class="listening-bar" aria-label="Music player">
+        <div class="country-details">
+            <div class="selected-country-text" id="selected-country-text" aria-live="polite">Explore the world's music</div>
+            <div class="hint" id="listening-status" role="status">Select a highlighted country to listen.</div>
+        </div>
+        <audio id="audio-player" aria-label="Country music player" controls preload="none"></audio>
+    </section>
+    <main class="globe-stage">
+        <div id="globe-container" aria-label="Interactive globe of countries with music"></div>
+        <div class="legend" aria-label="Map legend"><span><i class="dot"></i>Music available</span><span><i class="dot selected"></i>Selected country</span></div>
+    </main>
 </body>
 </html>

@@ -24,11 +24,56 @@ from werkzeug.middleware.dispatcher import DispatcherMiddleware
 flask_wsgi_app = app.wsgi_app
 app.wsgi_app = DispatcherMiddleware(flask_wsgi_app, {'/driftr': flask_wsgi_app})
 
-@app.before_request
-def require_persistent_storage():
-    if os.environ.get('VERCEL') and not os.environ.get('DATABASE_URL') and request.method == 'POST':
-        return jsonify({'error': 'Persistent storage is not configured. Set DATABASE_URL to enable edits.'}), 503
+from flask import g, make_response
+from admin_auth import COOKIE_NAME, SUPABASE_URL, SUPABASE_KEY, verify_admin, load_admin, csrf_token, valid_csrf
 
+app.jinja_env.globals['csrf_token'] = csrf_token
+
+@app.before_request
+def protect_management():
+    management = request.path.startswith(('/countries', '/categories'))
+    if management or request.endpoint in ('admin', 'admin_logout'):
+        load_admin()
+    if management:
+        if not g.admin_user:
+            if request.method == 'POST':
+                return jsonify({'error': 'Admin access required'}), 401
+            return redirect(url_for('admin'))
+        if request.method == 'POST':
+            if not valid_csrf():
+                return jsonify({'error': 'Invalid form token. Reload and try again.'}), 403
+            if os.environ.get('VERCEL') and not os.environ.get('DATABASE_URL'):
+                return jsonify({'error': 'Persistent storage is not configured. Editing remains disabled.'}), 503
+
+@app.after_request
+def private_admin_responses(response):
+    if request.path.startswith(('/admin', '/countries', '/categories')):
+        response.headers['Cache-Control'] = 'private, no-store'
+    return response
+
+@app.route('/admin')
+def admin():
+    return render_template('admin.html', user=g.admin_user, supabase_url=SUPABASE_URL, supabase_key=SUPABASE_KEY)
+
+@app.route('/admin/session', methods=['POST'])
+def admin_session():
+    authorization = request.headers.get('Authorization', '')
+    token = authorization[7:] if authorization.startswith('Bearer ') else ''
+    if not verify_admin(token):
+        return jsonify({'error': 'Sign in with an account in the Dayboard admin group.'}), 403
+    response = make_response(jsonify({'redirect': url_for('manage_countries')}))
+    response.set_cookie(COOKIE_NAME, token, max_age=3600, httponly=True,
+                        secure=bool(os.environ.get('VERCEL')) or request.is_secure,
+                        samesite='Lax', path=request.script_root or '/')
+    return response
+
+@app.route('/admin/logout', methods=['POST'])
+def admin_logout():
+    if not g.admin_user or not valid_csrf():
+        return jsonify({'error': 'Invalid form token'}), 403
+    response = redirect(url_for('index'))
+    response.delete_cookie(COOKIE_NAME, path=request.script_root or '/')
+    return response
 
 # Home route with the globe
 @app.route('/')
