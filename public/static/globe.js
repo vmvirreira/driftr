@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedCountryText.textContent = countryName;
 
             // Fetch the MP3 link from the backend
-            fetch(`/api/mp3/${countryName}`)
+            fetch(`${window.DRIFTR_BASE_URL || '/'}api/mp3/${encodeURIComponent(countryName)}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.mp3_link) {

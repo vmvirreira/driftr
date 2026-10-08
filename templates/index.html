@@ -12,6 +12,7 @@
     <script src="https://unpkg.com/three"></script>
     <script src="https://unpkg.com/globe.gl"></script>
     <script src="https://unpkg.com/topojson@3"></script>
+    <script>window.DRIFTR_BASE_URL = {{ url_for('index') | tojson }};</script>
     <script src="{{ url_for('static', filename='globe.js') }}"></script>
 
     <style>

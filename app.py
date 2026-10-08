@@ -17,6 +17,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
+# Preserve SCRIPT_NAME so Flask generates links under the etherLAND mount.
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
+flask_wsgi_app = app.wsgi_app
+app.wsgi_app = DispatcherMiddleware(flask_wsgi_app, {'/driftr': flask_wsgi_app})
+
 @app.before_request
 def require_persistent_storage():
     if os.environ.get('VERCEL') and not os.environ.get('DATABASE_URL') and request.method == 'POST':
