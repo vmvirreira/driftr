@@ -4,11 +4,24 @@ from crud import get_all_countries, add_country, update_country, delete_country,
 from flask import jsonify
 import os
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///countrymusic.db'
+app = Flask(__name__, static_folder='public/static', static_url_path='/static')
+database_url = os.environ.get('DATABASE_URL')
+if database_url and database_url.startswith(('postgres://', 'postgresql://')):
+    database_url = database_url.replace(database_url.split('://')[0] + '://', 'postgresql+psycopg://', 1)
+if os.environ.get('VERCEL') and not database_url:
+    # The bundled database supports previews; persistent edits need DATABASE_URL.
+    database_url = 'sqlite:///file:' + os.path.join(app.root_path, 'instance', 'countrymusic.db') + '?mode=ro&uri=true'
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///countrymusic.db'
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_pre_ping': True}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
+
+@app.before_request
+def require_persistent_storage():
+    if os.environ.get('VERCEL') and not os.environ.get('DATABASE_URL') and request.method == 'POST':
+        return jsonify({'error': 'Persistent storage is not configured. Set DATABASE_URL to enable edits.'}), 503
+
 
 # Home route with the globe
 @app.route('/')
@@ -72,8 +85,6 @@ def delete_category_view(id):
 @app.route('/api/mp3/<country>')
 def get_mp3(country):
     country_data = Country.query.filter_by(country_name=country).first()
-    print("clicked")
-    print(country_data)
     if country_data:
         return jsonify({'mp3_link': country_data.mp3_link})
     return jsonify({'error': 'Country not found'}), 404
@@ -86,7 +97,5 @@ def countries_with_mp3():
 
 if __name__ == '__main__':
     with app.app_context():
-        # Ensure the database is created if it doesn't exist
-        if not os.path.exists('countrymusic.db'):
-            db.create_all()
-    app.run(debug=True)
+        db.create_all()
+    app.run(debug=os.environ.get('FLASK_DEBUG') == '1')
