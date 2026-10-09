@@ -18,7 +18,7 @@
             <button class="btn btn-outline-secondary btn-sm">Sign out</button>
         </form>
     </nav>
-    <div class="container"><p class="alert alert-info">Admin access verified. Catalog editing remains disabled while persistent storage is unresolved.</p></div>
+    <div class="container"><p class="alert alert-info">{% if g.catalog_persistent %}Admin access verified. Changes are saved to the Supabase music catalog.{% else %}Admin access verified. Run the Supabase catalog migration to enable persistent editing.{% endif %}</p></div>
     {% block content %}{% endblock %}
 </body>
 </html>

@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/globe.gl"></script>
     <script src="https://unpkg.com/topojson@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
     <script>window.DRIFTR_BASE_URL = {{ url_for('index') | tojson }};</script>
     <script src="{{ url_for('static', filename='globe.js') }}" defer></script>
     <style>
@@ -41,7 +42,7 @@
 <body>
     <nav class="navigation" aria-label="Main navigation">
         <a class="brand" href="{{ url_for('index') }}">driftr</a>
-        <a class="admin-link" href="{{ url_for('admin') }}">Admin access</a>
+        <div style="display:flex;align-items:center;gap:20px"><label style="font-size:.85rem;color:#a0b6c4;cursor:pointer"><input id="country-names" type="checkbox" checked> Country names</label><a class="admin-link" href="{{ url_for('admin') }}">Admin access</a></div>
     </nav>
     <section class="listening-bar" aria-label="Music player">
         <div class="country-details">

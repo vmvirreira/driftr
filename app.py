@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 from models import db, Country, Category
-from crud import get_all_countries, add_country, update_country, delete_country, get_all_categories, add_category, update_category, delete_category
+from crud import get_country, get_all_countries, add_country, update_country, delete_country, get_all_categories, add_category, update_category, delete_category
 from flask import jsonify
 import os
 
@@ -42,8 +42,6 @@ def protect_management():
         if request.method == 'POST':
             if not valid_csrf():
                 return jsonify({'error': 'Invalid form token. Reload and try again.'}), 403
-            if os.environ.get('VERCEL') and not os.environ.get('DATABASE_URL'):
-                return jsonify({'error': 'Persistent storage is not configured. Editing remains disabled.'}), 503
 
 @app.after_request
 def private_admin_responses(response):
@@ -74,6 +72,12 @@ def admin_logout():
     response = redirect(url_for('index'))
     response.delete_cookie(COOKIE_NAME, path=request.script_root or '/')
     return response
+
+from supabase_catalog import CatalogUnavailable
+
+@app.errorhandler(CatalogUnavailable)
+def catalog_error(error):
+    return jsonify({'error': str(error)}), 503
 
 # Home route with the globe
 @app.route('/')
@@ -136,14 +140,14 @@ def delete_category_view(id):
 
 @app.route('/api/mp3/<country>')
 def get_mp3(country):
-    country_data = Country.query.filter_by(country_name=country).first()
+    country_data = get_country(country)
     if country_data:
         return jsonify({'mp3_link': country_data.mp3_link})
     return jsonify({'error': 'Country not found'}), 404
 
 @app.route('/api/countries_with_mp3')
 def countries_with_mp3():
-    countries = Country.query.all()
+    countries = get_all_countries()
     countries_with_mp3 = [country.country_name for country in countries if country.mp3_link]
     return jsonify(countries_with_mp3)
 

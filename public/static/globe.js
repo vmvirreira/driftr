@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let selected = null;
     let hovered = null;
     let selectionVersion = 0;
+    let countryLabels = [];
     const name = country => country.properties.name;
     const available = country => musicCountries.has(name(country));
     const capColor = country => country === selected ? 'rgba(241,207,139,0.75)' : available(country) ? (country === hovered ? 'rgba(100,216,207,0.8)' : 'rgba(100,216,207,0.48)') : 'rgba(10,30,40,0.12)';
@@ -18,6 +19,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         .polygonSideColor(() => 'rgba(100,216,207,0.12)')
         .polygonStrokeColor(country => country === selected ? '#f1cf8b' : available(country) ? '#64d8cf' : 'rgba(200,220,230,0.16)')
         .polygonAltitude(country => country === selected ? 0.018 : available(country) ? 0.008 : 0.001)
+        .labelText(country => country.properties.name)
+        .labelLat(country => country.center[1])
+        .labelLng(country => country.center[0])
+        .labelAltitude(0.025)
+        .labelSize(0.6)
+        .labelDotRadius(0)
+        .labelColor(country => available(country) ? '#bafff6' : '#d8e5ed')
+        .labelsTransitionDuration(0)
         .polygonLabel(country => `${name(country)} · ${available(country) ? 'Music available' : 'No recording yet'}`)
         .onPolygonHover(country => { hovered = country; globe.polygonCapColor(capColor); container.style.cursor = country && available(country) ? 'pointer' : 'grab'; })
         .onPolygonClick(async country => {
@@ -40,6 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 audioPlayer.play().catch(() => { if (version === selectionVersion) status.textContent = 'Press play to start listening.'; });
             } catch { if (version === selectionVersion) status.textContent = 'This recording could not load. Please try again.'; }
         });
+    document.getElementById('country-names').addEventListener('change', event => globe.labelsData(event.target.checked ? countryLabels : []));
     new ResizeObserver(() => globe.width(container.clientWidth).height(container.clientHeight)).observe(container);
     try {
         const [catalogResponse, worldResponse] = await Promise.all([
@@ -49,7 +59,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!catalogResponse.ok || !worldResponse.ok) throw new Error('Map unavailable');
         const [catalog, world] = await Promise.all([catalogResponse.json(), worldResponse.json()]);
         catalog.forEach(country => musicCountries.add(country));
-        globe.polygonsData(topojson.feature(world, world.objects.countries).features);
+        const countries = topojson.feature(world, world.objects.countries).features;
+        countryLabels = countries.map(country => ({...country, center: d3.geoCentroid(country)}));
+        globe.polygonsData(countries);
+        if (document.getElementById('country-names').checked) globe.labelsData(countryLabels);
         status.textContent = `${musicCountries.size} countries with music. Select a teal country to listen.`;
     } catch { status.textContent = 'The music map could not load. Please refresh to try again.'; }
 });

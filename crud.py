@@ -1,47 +1,65 @@
-from models import db, Country, Category
+from flask import abort, g
+from models import Country, Category
+from supabase_catalog import rows, write, CatalogUnavailable
 
-# Country CRUD functions
+COUNTRIES = 'driftr_country_audio'
+CATEGORIES = 'driftr_categories'
+
+
 def get_country(country_name):
-    return Country.query.filter_by(country_name=country_name).first()
+    result = rows(COUNTRIES, {'select': '*', 'country_name': 'eq.' + country_name, 'limit': '1'})
+    if result is None:
+        return Country.query.filter_by(country_name=country_name).first()
+    return result[0] if result else None
+
 
 def get_all_countries():
-    return Country.query.all()
+    result = rows(COUNTRIES)
+    g.catalog_persistent = result is not None
+    return Country.query.all() if result is None else result
+
+
+def validate_country(country_name, mp3_link):
+    from urllib.parse import urlsplit
+    country_name, mp3_link = country_name.strip(), mp3_link.strip()
+    parsed = urlsplit(mp3_link)
+    if not country_name or len(country_name) > 100 or parsed.scheme != 'https' or not parsed.netloc:
+        abort(400, 'Enter a country name and a valid HTTPS audio URL.')
+    return {'country_name': country_name, 'mp3_link': mp3_link}
+
 
 def add_country(country_name, mp3_link):
-    new_country = Country(country_name=country_name, mp3_link=mp3_link)
-    db.session.add(new_country)
-    db.session.commit()
+    write(COUNTRIES, 'POST', validate_country(country_name, mp3_link))
+
 
 def update_country(id, country_name, mp3_link):
-    country = Country.query.get(id)
-    if country:
-        country.country_name = country_name
-        country.mp3_link = mp3_link
-        db.session.commit()
+    write(COUNTRIES, 'PATCH', validate_country(country_name, mp3_link), id)
+
 
 def delete_country(id):
-    country = Country.query.get(id)
-    if country:
-        db.session.delete(country)
-        db.session.commit()
+    write(COUNTRIES, 'DELETE', row_id=id)
 
-# Category CRUD functions
+
 def get_all_categories():
-    return Category.query.all()
+    result = rows(CATEGORIES)
+    g.catalog_persistent = result is not None
+    return Category.query.all() if result is None else result
 
-def add_category(category_name):
-    new_category = Category(name=category_name)
-    db.session.add(new_category)
-    db.session.commit()
 
-def update_category(id, category_name):
-    category = Category.query.get(id)
-    if category:
-        category.name = category_name
-        db.session.commit()
+def category_values(name):
+    name = name.strip()
+    if not name or len(name) > 100:
+        abort(400, 'Enter a category name between 1 and 100 characters.')
+    return {'name': name}
+
+
+def add_category(name):
+    write(CATEGORIES, 'POST', category_values(name))
+
+
+def update_category(id, name):
+    write(CATEGORIES, 'PATCH', category_values(name), id)
+
 
 def delete_category(id):
-    category = Category.query.get(id)
-    if category:
-        db.session.delete(category)
-        db.session.commit()
+    write(CATEGORIES, 'DELETE', row_id=id)
