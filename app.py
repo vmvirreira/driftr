@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 from models import db, Country, Category
-from crud import get_country, get_all_countries, add_country, update_country, delete_country, get_all_categories, add_category, update_category, delete_category
+from crud import audio_url, get_country, get_all_countries, add_country, update_country, delete_country, get_all_categories, add_category, update_category, delete_category
 from flask import jsonify
 import os
 
@@ -145,7 +145,7 @@ def get_mp3(country=None):
     country = unquote(country) if country is not None else request.args.get('country', '')
     country_data = get_country(country)
     if country_data:
-        return jsonify({'mp3_link': country_data.mp3_link})
+        return jsonify({'mp3_link': audio_url(country_data.mp3_link)})
     return jsonify({'error': 'Country not found'}), 404
 
 @app.route('/api/countries_with_mp3')

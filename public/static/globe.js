@@ -85,13 +85,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 audioPlayer.play().catch(() => { if (version === selectionVersion) status.textContent = 'Press play to start listening.'; });
             } catch { if (version === selectionVersion) status.textContent = 'This recording could not load. Please try again.'; }
     }
+    audioPlayer.addEventListener('error', () => {
+        if (audioPlayer.getAttribute('src')) status.textContent = 'The recording host could not load this audio. Please try again shortly.';
+    });
     const globe = Globe()(container)
         .backgroundColor('#071421')
         .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
         .polygonCapColor(capColor)
+        // Finer curved caps and clearance keep large country fills above the globe.
+        .polygonCapCurvatureResolution(1)
         .polygonSideColor(() => 'rgba(100,216,207,0.12)')
         .polygonStrokeColor(country => (selected && name(country) === name(selected)) ? '#f1cf8b' : available(country) ? '#64d8cf' : 'rgba(200,220,230,0.16)')
-        .polygonAltitude(country => (selected && name(country) === name(selected)) ? 0.018 : available(country) ? 0.008 : 0.001)
+        .polygonAltitude(country => (selected && name(country) === name(selected)) ? 0.018 : available(country) ? 0.008 : 0.006)
         .labelText(country => country.properties.name)
         .labelLat(country => country.center[1])
         .labelLng(country => country.center[0])

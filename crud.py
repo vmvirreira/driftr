@@ -19,13 +19,31 @@ def get_all_countries():
     return Country.query.all() if result is None else result
 
 
+def audio_url(url):
+    """Follow Archive.org's item download route instead of a movable storage server."""
+    from urllib.parse import urlsplit, unquote, quote
+    parsed = urlsplit(url)
+    host = (parsed.hostname or '').lower()
+    if host != 'archive.org' and not host.endswith('.archive.org'):
+        return url
+    parts = parsed.path.split('/')
+    marker = 'items' if 'items' in parts else 'download' if 'download' in parts else None
+    if marker:
+        index = parts.index(marker)
+        if len(parts) > index + 2:
+            item = quote(unquote(parts[index + 1]), safe='')
+            filename = quote(unquote('/'.join(parts[index + 2:])), safe='/')
+            return 'https://archive.org/download/' + item + '/' + filename
+    return url
+
+
 def validate_country(country_name, mp3_link):
     from urllib.parse import urlsplit
     country_name, mp3_link = country_name.strip(), mp3_link.strip()
     parsed = urlsplit(mp3_link)
     if not country_name or len(country_name) > 100 or parsed.scheme != 'https' or not parsed.netloc:
         abort(400, 'Enter a country name and a valid HTTPS audio URL.')
-    return {'country_name': country_name, 'mp3_link': mp3_link}
+    return {'country_name': country_name, 'mp3_link': audio_url(mp3_link)}
 
 
 def add_country(country_name, mp3_link):
