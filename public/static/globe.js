@@ -11,25 +11,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     let countryLabels = [];
     const name = country => country.properties.name;
     const available = country => musicCountries.has(name(country));
-    const capColor = country => country === selected ? 'rgba(241,207,139,0.75)' : available(country) ? (country === hovered ? 'rgba(100,216,207,0.8)' : 'rgba(100,216,207,0.48)') : 'rgba(10,30,40,0.12)';
-    const globe = Globe()(container)
-        .backgroundColor('#071421')
-        .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
-        .polygonCapColor(capColor)
-        .polygonSideColor(() => 'rgba(100,216,207,0.12)')
-        .polygonStrokeColor(country => country === selected ? '#f1cf8b' : available(country) ? '#64d8cf' : 'rgba(200,220,230,0.16)')
-        .polygonAltitude(country => country === selected ? 0.018 : available(country) ? 0.008 : 0.001)
-        .labelText(country => country.properties.name)
-        .labelLat(country => country.center[1])
-        .labelLng(country => country.center[0])
-        .labelAltitude(0.025)
-        .labelSize(country => available(country) ? 1.15 : 0.9)
-        .labelDotRadius(0)
-        .labelColor(country => available(country) ? '#bafff6' : '#d8e5ed')
-        .labelsTransitionDuration(0)
-        .polygonLabel(country => `${name(country)} · ${available(country) ? 'Music available' : 'No recording yet'}`)
-        .onPolygonHover(country => { hovered = country; globe.polygonCapColor(capColor); container.style.cursor = country && available(country) ? 'pointer' : 'grab'; })
-        .onPolygonClick(async country => {
+    const capColor = country => (selected && name(country) === name(selected)) ? 'rgba(241,207,139,0.75)' : available(country) ? (country === hovered ? 'rgba(100,216,207,0.8)' : 'rgba(100,216,207,0.48)') : 'rgba(10,30,40,0.12)';
+    async function selectCountry(country) {
             if (!available(country)) { status.textContent = `No recording for ${name(country)} yet. Try a teal country.`; return; }
             selected = country;
             const version = ++selectionVersion;
@@ -48,7 +31,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                 status.textContent = 'Use the timeline to explore the recording.';
                 audioPlayer.play().catch(() => { if (version === selectionVersion) status.textContent = 'Press play to start listening.'; });
             } catch { if (version === selectionVersion) status.textContent = 'This recording could not load. Please try again.'; }
-        });
+    }
+    const globe = Globe()(container)
+        .backgroundColor('#071421')
+        .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+        .polygonCapColor(capColor)
+        .polygonSideColor(() => 'rgba(100,216,207,0.12)')
+        .polygonStrokeColor(country => (selected && name(country) === name(selected)) ? '#f1cf8b' : available(country) ? '#64d8cf' : 'rgba(200,220,230,0.16)')
+        .polygonAltitude(country => (selected && name(country) === name(selected)) ? 0.018 : available(country) ? 0.008 : 0.001)
+        .labelText(country => country.properties.name)
+        .labelLat(country => country.center[1])
+        .labelLng(country => country.center[0])
+        .labelAltitude(0.025)
+        .labelSize(country => available(country) ? 1.15 : 0.9)
+        .labelDotRadius(0)
+        .labelColor(country => available(country) ? '#bafff6' : '#d8e5ed')
+        .labelsTransitionDuration(0)
+        .polygonLabel(country => `${name(country)} · ${available(country) ? 'Music available' : 'No recording yet'}`)
+        .onPolygonHover(country => { hovered = country; globe.polygonCapColor(capColor); container.style.cursor = country && available(country) ? 'pointer' : 'grab'; })
+        .onPolygonClick(selectCountry)
+        .onLabelClick(selectCountry);
+
     document.getElementById('country-names').addEventListener('change', event => globe.labelsData(event.target.checked ? countryLabels : []));
     new ResizeObserver(() => globe.width(container.clientWidth).height(container.clientHeight)).observe(container);
     try {
