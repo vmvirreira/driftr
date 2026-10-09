@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         .labelLat(country => country.center[1])
         .labelLng(country => country.center[0])
         .labelAltitude(0.025)
-        .labelSize(0.6)
+        .labelSize(country => available(country) ? 1.15 : 0.9)
         .labelDotRadius(0)
         .labelColor(country => available(country) ? '#bafff6' : '#d8e5ed')
         .labelsTransitionDuration(0)
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             audioPlayer.removeAttribute('src');
             audioPlayer.load();
             try {
-                const response = await fetch(`${base}api/mp3/${encodeURIComponent(name(country))}`);
+                const response = await fetch(`${base}api/mp3?country=${encodeURIComponent(name(country))}`);
                 if (!response.ok) throw new Error('Recording unavailable');
                 const data = await response.json();
                 if (version !== selectionVersion) return;

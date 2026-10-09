@@ -138,8 +138,11 @@ def delete_category_view(id):
     delete_category(id)
     return redirect(url_for('manage_categories'))
 
+@app.route('/api/mp3')
 @app.route('/api/mp3/<country>')
-def get_mp3(country):
+def get_mp3(country=None):
+    from urllib.parse import unquote
+    country = unquote(country) if country is not None else request.args.get('country', '')
     country_data = get_country(country)
     if country_data:
         return jsonify({'mp3_link': country_data.mp3_link})
